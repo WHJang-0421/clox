@@ -1,3 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
 project(Clox LANGUAGES C)
-add_executable(main.o src/main.c)
+include_directories(include)
+file(GLOB SOURCES src/*.c)
+add_executable(main.o ${SOURCES})
