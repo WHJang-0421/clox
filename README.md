@@ -5,6 +5,4 @@ This directory contains my answers for the excercises in [Crafting Interpreters]
 a. move to `build` directory  
 b. `cmake ..`  
 c. `cmake --build .`: compile  
-d. `./main.o`: run executable  
-
-Or, just run the bash file: `sh clox.sh`  
+d. `./main.o`: run executable
