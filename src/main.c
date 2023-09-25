@@ -68,9 +68,22 @@ int main(int argc, const char * argv[]) {
     writeChunk(&chunk, OP_RETURN, 4);
     interpret(&chunk);
     disassembleChunk(&chunk, "test chunk");
-    #undef ADD_CONSTANT
     freeVM();
     freeChunk(&chunk);
+
+    // for performance measurement
+    for (int i = 0; i < 1000000; i++) {
+    initVM();
+    initChunk(&chunk);
+    ADD_CONSTANT(10, 5);
+    #undef ADD_CONSTANT
+    for (int i = 0; i < 250; i++) {
+        writeChunk(&chunk, OP_NEGATE, 5);
+    }
+    writeChunk(&chunk, OP_RETURN, 5);
+    freeVM();
+    freeChunk(&chunk);
+    }
 
     return 0;
 }

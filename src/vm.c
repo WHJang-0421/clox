@@ -62,7 +62,7 @@ for (;;) {
         break;
         }
     case OP_NEGATE: {
-        push(-pop());
+        *(vm.stackTop-1) *= -1;
         break;
         }
     case OP_ADD: BINARY_OP(+); break;
