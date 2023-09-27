@@ -1,0 +1,20 @@
+compile(source, chunk)
+	- expression()
+		- parsePrecedence(PREC_ASSIGNMENT)
+			- grouping() <- prefixRule
+				- expression()
+					- parsePrecedence(PREC_ASSIGNMENT)
+						- unary() <- prefixRule, -
+							- parsePrecedence(PREC_UNARY)
+								- number() <- prefixRule, 1
+						- binary() <- infixRule, +
+							- parsePrecedence(PREC_FACTOR)
+								- number() <- prefixRule, 2
+			- binary() <- infixRule, *
+				- parsePrecedence(PREC_UNARY)
+					- number() <- prefixRule, 3
+			- binary() <- infixRule, -
+				- parsePrecedence(PREC_FACTOR)
+					- unary() <- prefixRule, -
+						- parsePrecedence(PREC_UNARY)
+							- number() <- prefixRule, 4
