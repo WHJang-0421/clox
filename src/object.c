@@ -6,11 +6,11 @@
 #include "value.h"
 #include "vm.h"
 
-#define ALLOCATE_OBJ(type, objectType) \
-    (type*)allocateObject(sizeof(type), objectType)
+#define ALLOCATE_OBJ(type, objectType, length) \
+    (type*)allocateObject(sizeof(type), objectType, length)
 
-static Obj* allocateObject(size_t size, ObjType type) {
-    Obj* object = (Obj*)reallocate(NULL, 0, size);
+static Obj* allocateObject(size_t size, ObjType type, int length) {
+    Obj* object = (Obj*)reallocate(NULL, 0, size + length * sizeof(type));
     object->type = type;
     object->next = vm.objects;
     vm.objects = object;
@@ -18,9 +18,9 @@ static Obj* allocateObject(size_t size, ObjType type) {
 }
 
 static ObjString* allocateString(char* chars, int length) {
-    ObjString* string = ALLOCATE_OBJ(ObjString, OBJ_STRING);
+    ObjString* string = ALLOCATE_OBJ(ObjString, OBJ_STRING, length);
     string->length = length;
-    string->chars = chars;
+    memcpy(string->chars, chars, length * sizeof(char));
     return string;
 }
 

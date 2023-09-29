@@ -16,13 +16,13 @@ typedef enum {
 
 struct Obj {
     ObjType type;
-    struct Obj* next;
+    Obj* next;
 };
 
 struct ObjString {
     Obj obj;
     int length;
-    char* chars;
+    char chars[];
 };
 
 ObjString* takeString(char* chars, int length);
