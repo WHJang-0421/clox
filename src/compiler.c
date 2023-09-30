@@ -372,6 +372,7 @@ ParseRule rules[] = {
   [TOKEN_ERROR]         = {NULL,     NULL,   PREC_NONE},
   [TOKEN_EOF]           = {NULL,     NULL,   PREC_NONE},
   [TOKEN_CONTINUE]      = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_SWITCH]        = {NULL,     NULL,   PREC_NONE},
 };
 
 static void parsePrecedence(Precedence precedence) {
@@ -551,6 +552,59 @@ static void ifStatement() {
     patchJump(elseJump);
 }
 
+static int switchCase() {
+    consume(TOKEN_CASE, "Expect 'case' for switch statement.");
+    emitByte(OP_DUPLICATE);
+    expression();
+    consume(TOKEN_COLON, "Expect ':' after expression.");
+
+    emitByte(OP_EQUAL);
+    int exitJump = emitJump(OP_JUMP_IF_FALSE);
+
+    emitByte(OP_POP);
+    while (!check(TOKEN_CASE) && !check(TOKEN_DEFAULT) && !check(TOKEN_RIGHT_BRACE)) {
+        statement();
+    }    
+
+    int finishJump = emitJump(OP_JUMP);
+
+    patchJump(exitJump);
+    emitByte(OP_POP);
+
+    return finishJump;
+}
+
+static void defaultCase() {
+    consume(TOKEN_COLON, "Expect ':' after default expression.");
+    while (!check(TOKEN_RIGHT_BRACE)) {
+        statement();
+    }
+}
+
+static void switchStatement() {
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after 'switch'.");
+    expression();
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
+
+    consume(TOKEN_LEFT_BRACE, "Expect '{' before switch body.");
+    int jumps[UINT8_COUNT];
+    int case_num = 0;
+    while (!check(TOKEN_DEFAULT) && !check(TOKEN_RIGHT_BRACE)) {
+        if (case_num == UINT8_COUNT) {
+            error("Too many cases in switch statement.");
+        }
+        jumps[case_num++] = switchCase();
+    }
+    
+    if (match(TOKEN_DEFAULT)) {
+        defaultCase();
+    }
+    consume(TOKEN_RIGHT_BRACE, "Expect '}' after switch body.");
+    for (int i = 0; i < case_num; i++) {
+        patchJump(jumps[i]);
+    }
+}
+
 static void continueStatement() {
     consume(TOKEN_SEMICOLON, "Expect ';' after continue.");
     if (current->loopCount == 0) {
@@ -630,6 +684,8 @@ static void statement() {
         ifStatement();
     } else if (match(TOKEN_CONTINUE)) {
         continueStatement();
+    } else if (match(TOKEN_SWITCH)) {
+        switchStatement();
     } else {
         expressionStatement();
     }

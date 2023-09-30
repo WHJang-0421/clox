@@ -1,0 +1,7 @@
+var a = 2;
+switch (a+1) {
+    case 2: print "no";
+    case 3: print "yes";
+    default: print "still no";
+}
+print "this works";
