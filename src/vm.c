@@ -32,11 +32,13 @@ void initVM() {
     resetStack();
     vm.objects = NULL;
     initTable(&vm.globals);
+    initTable(&vm.global_constants);
     initTable(&vm.strings);
 }
 
 void freeVM() {
     freeTable(&vm.globals);
+    freeTable(&vm.global_constants);
     freeTable(&vm.strings);
     freeObjects();
 }
@@ -134,7 +136,7 @@ for (;;) {
     case OP_GET_GLOBAL: {
         ObjString* name = READ_STRING();
         Value value;
-        if (!tableGet(&vm.globals, name, &value)) {
+        if (!tableGet(&vm.globals, name, &value) && !tableGet(&vm.global_constants, name, &value)) {
             runtimeError("Undefined variable '%s'.", name->chars);
             return INTERPRET_RUNTIME_ERROR;
         }
@@ -152,8 +154,19 @@ for (;;) {
         pop();
         break;
     }
+    case OP_DEFINE_GLOBAL_CONST: {
+        ObjString* name = READ_STRING();
+        tableSet(&vm.global_constants, name, peek(0));
+        pop();
+        break;
+    }
     case OP_SET_GLOBAL: {
         ObjString* name = READ_STRING();
+        Value* value;
+        if (tableGet(&vm.global_constants, name, value)) {
+            runtimeError("cannot change constant variable '%s'", name->chars);
+        }
+
         if (tableSet(&vm.globals, name, peek(0))) {
             tableDelete(&vm.globals, name);
             runtimeError("Undefined variable '%s'.", name->chars);
