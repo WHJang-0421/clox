@@ -47,6 +47,8 @@ typedef struct {
 typedef struct {
     Local locals[UINT8_COUNT];
     int localCount;
+    int loop_tops[UINT8_COUNT];
+    int loopCount;
     int scopeDepth;
 } Compiler;
 
@@ -170,6 +172,7 @@ static void patchJump(int offset) {
 static void initCompiler(Compiler* compiler) {
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
+    compiler->loopCount = 0;
     current = compiler;
 }
 
@@ -208,13 +211,17 @@ static void beginScope() {
     current->scopeDepth++;
 }
 
-static void endScope() {
-    current->scopeDepth--;
-
+static void cleanScope() {
     while (current->localCount > 0 && current->locals[current->localCount-1].depth > current->scopeDepth) {
         emitByte(OP_POP);
         current->localCount--;
     }
+}
+
+static void endScope() {
+    current->scopeDepth--;
+
+    cleanScope();
 }
 
 static void expression();
@@ -364,6 +371,7 @@ ParseRule rules[] = {
   [TOKEN_WHILE]         = {NULL,     NULL,   PREC_NONE},
   [TOKEN_ERROR]         = {NULL,     NULL,   PREC_NONE},
   [TOKEN_EOF]           = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_CONTINUE]      = {NULL,     NULL,   PREC_NONE},
 };
 
 static void parsePrecedence(Precedence precedence) {
@@ -507,15 +515,21 @@ static void forStatement() {
         loopStart = incrementStart;
         patchJump(bodyJump);
     }
+    if (current->loopCount >= UINT8_COUNT) {
+        error("Too many loops.");
+    }
+    current->loop_tops[current->loopCount++] = loopStart;
 
     statement();
     emitLoop(loopStart);
+
 
     if (exitJump != -1) {
         patchJump(exitJump);
         emitByte(OP_POP);
     }
 
+    current->loopCount--;
     endScope();
 }
 
@@ -537,6 +551,14 @@ static void ifStatement() {
     patchJump(elseJump);
 }
 
+static void continueStatement() {
+    consume(TOKEN_SEMICOLON, "Expect ';' after continue.");
+    if (current->loopCount == 0) {
+        error("Cannot use continue outside loops");
+    }
+    emitLoop(current->loop_tops[--current->loopCount]);
+}
+
 static void printStatement() {
     expression();
     consume(TOKEN_SEMICOLON, "Expect ';' after value.");
@@ -545,6 +567,7 @@ static void printStatement() {
 
 static void whileStatement() {
     int loopStart = currentChunk()->count;
+    current->loop_tops[current->loopCount++] = loopStart;
     consume(TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
     expression();
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
@@ -555,6 +578,8 @@ static void whileStatement() {
     emitLoop(loopStart);
     
     patchJump(exitJump);
+    cleanScope();
+    current->loopCount--;
     emitByte(OP_POP);
 }
 
@@ -603,6 +628,8 @@ static void statement() {
         endScope();
     } else if (match(TOKEN_IF)) {
         ifStatement();
+    } else if (match(TOKEN_CONTINUE)) {
+        continueStatement();
     } else {
         expressionStatement();
     }
