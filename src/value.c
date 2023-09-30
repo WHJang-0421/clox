@@ -23,6 +23,15 @@ void writeValueArray(ValueArray* array, Value value) {
   array->count++;
 }
 
+int findValue(ValueArray* array, Value string) {
+  for (int i = 0; i < array->count; i++) {
+    if (AS_OBJ(array->values[i]) == AS_OBJ(string)) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 void freeValueArray(ValueArray* array) {
   FREE_ARRAY(Value, array->values, array->capacity);
   initValueArray(array);

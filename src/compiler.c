@@ -128,7 +128,13 @@ static void emitConstant(Value value) {
 }
 
 static uint8_t identifierConstant(Token* name) {
-    return makeConstant(OBJ_VAL(copyString(name->start, name->length)));
+    Value val = OBJ_VAL(copyString(name->start, name->length));
+    if (findValue(&currentChunk()->constants, val) == -1) {
+        return makeConstant(val);
+    } else {
+        return (uint8_t)findValue(&currentChunk()->constants, val);
+    }
+    
 }
 
 static void endCompiler() {
