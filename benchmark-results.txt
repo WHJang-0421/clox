@@ -3,3 +3,5 @@ before optimization:
 - functions: 3.06719 seconds
 
 after optimization:
+- control flox: 1.28919 seconds
+- functions: 3.107 seconds
