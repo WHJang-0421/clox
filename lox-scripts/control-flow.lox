@@ -1,0 +1,8 @@
+var start = clock();
+for (var i = 0; i < 10000; i = i + 1) {
+    var j = i;
+    while (j <= 2 * i) {
+        j = j + 3;
+    }
+}
+print clock() - start;

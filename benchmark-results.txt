@@ -1,0 +1,5 @@
+before optimization:
+- control flow: 1.52578 seconds
+- functions: 3.06719 seconds
+
+after optimization:
