@@ -14,11 +14,15 @@
 
 VM vm;
 
-static Value clockNative(int argCount, Value* args) {
+#define ERROR_MSG_LENGTH 500
+#define RUNTIME_ERROR(message) {strncpy(msg, message, ERROR_MSG_LENGTH); return NIL_VAL;}
+
+static Value clockNative(int argCount, Value* args, char* msg) {
     return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);
 }
 
-static Value sqrtNative(int argCount, Value* args) {
+static Value sqrtNative(int argCount, Value* args, char* msg) {
+    if (args->type != VAL_NUMBER) RUNTIME_ERROR("Can only square root a number.");
     return NUMBER_VAL(sqrt(AS_NUMBER(*args)));
 }
 
@@ -113,7 +117,12 @@ static bool callValue(Value callee, int argCount, register uint8_t* ip) {
                     runtimeError(ip, "Expected %d arguments but got %d.", nativeObj->arity, argCount);
                     return false;
                 }
-                Value result = native(argCount, vm.stackTop - argCount);
+                char msg[ERROR_MSG_LENGTH];
+                Value result = native(argCount, vm.stackTop - argCount, msg);
+                if (IS_NIL(result) && msg != NULL) {
+                    runtimeError(ip, msg);
+                    return false;
+                }
                 vm.stackTop -= argCount + 1;
                 push(result);
                 return true;

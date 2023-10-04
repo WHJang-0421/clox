@@ -10,6 +10,10 @@ after optimization:
 it seems like the optimization is worth it, not in function calls but in control flow.
 
 question 3:
-before runtime mechanisms:
+before runtime error for native functions:
 - sqrt-example 0.945847
 - functions: 2.76894
+after runtime error for native functions:
+- sqrt-example: 0.917944
+- fucntions: 2.90101
+It's strange that sqrt-example gets better after adding runtime error. It seems like it's because the variation in runtime.
