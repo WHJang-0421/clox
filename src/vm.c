@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 
 #include "common.h"
 #include "object.h"
@@ -15,6 +16,10 @@ VM vm;
 
 static Value clockNative(int argCount, Value* args) {
     return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);
+}
+
+static Value sqrtNative(int argCount, Value* args) {
+    return NUMBER_VAL(sqrt(AS_NUMBER(*args)));
 }
 
 static void resetStack() {
@@ -57,6 +62,7 @@ void initVM() {
     initTable(&vm.strings);
 
     defineNative("clock", clockNative, 0);
+    defineNative("sqrt", sqrtNative, 1);
 }
 
 void freeVM() {
@@ -101,7 +107,7 @@ static bool callValue(Value callee, int argCount, register uint8_t* ip) {
             case OBJ_FUNCTION:
                 return call(AS_FUNCTION(callee), argCount, ip);
             case OBJ_NATIVE: {
-                ObjNative* nativeObj = AS_OBJ(callee);
+                ObjNative* nativeObj = (ObjNative*)AS_OBJ(callee);
                 NativeFn native = AS_NATIVE(callee);
                 if (argCount != nativeObj->arity) {
                     runtimeError(ip, "Expected %d arguments but got %d.", nativeObj->arity, argCount);

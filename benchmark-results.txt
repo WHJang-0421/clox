@@ -1,3 +1,4 @@
+question 1:
 before optimization:
 - control flow: 1.52578 seconds
 - functions: 3.06719 seconds
@@ -5,3 +6,10 @@ before optimization:
 after optimization:
 - control flox: 1.28919 seconds
 - functions: 3.107 seconds
+
+it seems like the optimization is worth it, not in function calls but in control flow.
+
+question 3:
+before runtime mechanisms:
+- sqrt-example 0.945847
+- functions: 2.76894
