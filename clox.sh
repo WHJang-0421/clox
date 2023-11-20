@@ -1,4 +1,9 @@
 cd build
 cmake ..
 cmake --build .
-./main.o
+if [ "$#" -eq 0 ]
+then
+    ./main.o
+else
+    ./main.o ../$1
+fi
